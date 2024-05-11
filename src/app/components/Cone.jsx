@@ -32,20 +32,47 @@ float sdHexagram( in vec2 p, in float r )
     p -= vec2(clamp(p.x,r*k.z,r*k.w),r);
     return length(p)*sign(p.y);
 }
+float dot2( in vec2 v ) { return dot(v,v); }
+
+float sdHeart( in vec2 p )
+{
+    p.x = abs(p.x);
+
+    if( p.y+p.x>1.0 ) {
+        return sqrt(dot2(p-vec2(0.25,0.75))) - sqrt(2.0)/4.0;
+    }
+    return sqrt(min(dot2(p-vec2(0.00,1.00)), dot2(p-0.5*max(p.x+p.y,0.0)))) * sign(p.x-p.y);
+}
+
+float sdfCoolS( in vec2 p )
+{
+    float six = (p.y<0.0) ? -p.x : p.x;
+    p.x = abs(p.x);
+    p.y = abs(p.y) - 0.2;
+    float rex = p.x - min(round(p.x/0.4),0.4);
+    float aby = abs(p.y-0.2)-0.6;
+    
+    float d = dot2(vec2(six,-p.y)-clamp(0.5*(six-p.y),0.0,0.2));
+    d = min(d,dot2(vec2(p.x,-aby)-clamp(0.5*(p.x-aby),0.0,0.4)));
+    d = min(d,dot2(vec2(rex,p.y  -clamp(p.y          ,0.0,0.4))));
+    
+    float s = 2.0*p.x + aby + abs(aby+0.4) - 0.4;
+    return sqrt(d) * sign(s);
+}
 
 void main() { 
   vec2 uvv = vUv*2.0 - 1.0;
   vec2 uvv0 = uvv;
   vec3 finalColor = vec3(0.0);
 
-  for(float i=0.0; i< 4.0; i++) {
+  for(float i=0.0; i< 2.0; i++) {
     uvv = fract(uvv *1.5) - 0.5;
 
-    float d = length(uvv) * exp(-length(uvv0));
+    float d = sdfCoolS((uvv));
 
     vec3 col = palette(length(uvv0) + i*.4 +iTime*.2);
 
-    d = sin(d*6. + iTime*(i*.33))/4.02;
+    d = sin(d*6. + iTime*(i*.93))/4.02;
     d = abs(d);
 
 
